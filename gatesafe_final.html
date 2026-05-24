@@ -1,0 +1,626 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>GATE-SAFE Prototype</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#07111f;
+color:white;
+margin:0;
+padding:20px;
+}
+
+h1{
+text-align:center;
+color:#4db8ff;
+font-size:42px;
+margin-bottom:5px;
+}
+
+.subtitle{
+text-align:center;
+color:#9fb6d1;
+margin-bottom:30px;
+font-size:18px;
+}
+
+.topflow{
+display:flex;
+justify-content:center;
+align-items:center;
+gap:20px;
+margin-bottom:30px;
+font-size:20px;
+font-weight:bold;
+flex-wrap:wrap;
+}
+
+.flowbox{
+background:#10233d;
+border:1px solid #2b5d91;
+padding:15px 20px;
+border-radius:12px;
+min-width:220px;
+text-align:center;
+}
+
+.arrow{
+font-size:30px;
+color:#4db8ff;
+}
+
+button{
+padding:12px 18px;
+border:none;
+border-radius:10px;
+font-weight:bold;
+cursor:pointer;
+transition:0.3s;
+}
+
+button:hover{
+opacity:0.9;
+}
+
+.main{
+background:#4db8ff;
+color:#07111f;
+display:block;
+margin:20px auto;
+font-size:16px;
+}
+
+.accept{
+background:#58d878;
+color:black;
+}
+
+.reject{
+background:#ff4d4d;
+color:white;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:16px;
+margin-top:20px;
+}
+
+.card{
+background:#10233d;
+border:1px solid #2b5d91;
+border-radius:14px;
+padding:20px;
+}
+
+.card h2{
+margin-top:0;
+color:#4db8ff;
+}
+
+.score{
+font-size:46px;
+font-weight:bold;
+margin:10px 0;
+transition:0.3s;
+}
+
+.trusted{
+color:#58d878;
+}
+
+.uncertain{
+color:#f7c948;
+}
+
+.untrusted{
+color:#ff4d4d;
+}
+
+.statusBanner{
+text-align:center;
+margin-top:30px;
+padding:20px;
+border-radius:14px;
+background:#10233d;
+border:1px solid #2b5d91;
+}
+
+.bigStatus{
+font-size:34px;
+font-weight:bold;
+margin-bottom:10px;
+transition:0.3s;
+}
+
+.small{
+font-size:13px;
+color:#9fb6d1;
+}
+
+.decisionBox{
+display:none;
+text-align:center;
+margin-top:25px;
+padding:20px;
+background:#10233d;
+border:1px solid #f7c948;
+border-radius:14px;
+}
+
+.factorGrid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:12px;
+margin-top:20px;
+}
+
+.factor{
+background:#10233d;
+padding:15px;
+border-radius:10px;
+border:1px solid #2b5d91;
+}
+
+.log{
+margin-top:30px;
+background:#10233d;
+padding:20px;
+border-radius:14px;
+border:1px solid #2b5d91;
+}
+
+.event{
+padding:10px;
+margin:8px 0;
+background:#071a2e;
+border-left:4px solid #4db8ff;
+}
+
+.warn{
+border-left-color:#f7c948;
+}
+
+.danger{
+border-left-color:#ff4d4d;
+}
+
+.tabs{
+display:flex;
+justify-content:center;
+gap:10px;
+margin-bottom:20px;
+}
+
+.tab{
+padding:10px 20px;
+background:#10233d;
+border:1px solid #2b5d91;
+border-radius:10px;
+cursor:pointer;
+}
+
+.activeTab{
+background:#4db8ff;
+color:black;
+font-weight:bold;
+}
+
+.view{
+display:none;
+}
+
+.activeView{
+display:block;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+th,td{
+border:1px solid #2b5d91;
+padding:12px;
+text-align:center;
+}
+
+th{
+background:#10233d;
+color:#4db8ff;
+}
+
+.footer{
+margin-top:25px;
+text-align:center;
+font-size:12px;
+color:#9fb6d1;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>GATE-SAFE</h1>
+
+<div class="subtitle">
+Operational Trust Gateway for Connected Aircraft Systems
+</div>
+
+<div class="topflow">
+
+<div class="flowbox">
+ACARS • ACMS • SATCOM
+</div>
+
+<div class="arrow">→</div>
+
+<div class="flowbox">
+GATE-SAFE Gateway
+</div>
+
+<div class="arrow">→</div>
+
+<div class="flowbox">
+ALLOW • FILTER • ISOLATE
+</div>
+
+</div>
+
+<div class="tabs">
+<div class="tab activeTab" onclick="showAircraft()">Aircraft View</div>
+<div class="tab" onclick="showGround()">Ground Operations</div>
+</div>
+
+<div id="aircraftView" class="view activeView">
+
+<button class="main" onclick="inject()">
+Inject Corrupted ACARS Message
+</button>
+
+<div class="grid">
+
+<div class="card">
+<h2>ACMS Reports</h2>
+<div class="score trusted">94%</div>
+<div>Trusted maintenance reporting</div>
+</div>
+
+<div class="card">
+<h2>ACARS AOC Message</h2>
+
+<div id="score" class="score trusted">
+92%
+</div>
+
+<div id="level">
+Trusted – normal behaviour
+</div>
+
+<div id="reason" class="small">
+Source valid • timing normal • data consistent
+</div>
+
+</div>
+
+<div class="card">
+<h2>SATCOM Link</h2>
+<div class="score trusted">88%</div>
+<div>Stable satellite communication</div>
+</div>
+
+</div>
+
+<div class="statusBanner">
+
+<div id="mode" class="bigStatus trusted">
+SAFE CONTINUITY MODE: STANDBY
+</div>
+
+<div id="modeText">
+All operational data streams are trusted
+</div>
+
+<div class="small">
+Phase-aware security • non-critical alerts suppressed during takeoff and landing
+</div>
+
+</div>
+
+<div id="decision" class="decisionBox">
+
+<h2>
+⚠ Decision Required
+</h2>
+
+<p>
+Uncertain operational data detected
+</p>
+
+<button class="accept" onclick="accept()">
+Accept & Continue
+</button>
+
+<button class="reject" onclick="reject()">
+Use Backup Mode
+</button>
+
+</div>
+
+<div class="factorGrid">
+
+<div class="factor">
+<b>Source Authenticity</b><br>
+<span id="sourceStatus">✅ Valid</span>
+</div>
+
+<div class="factor">
+<b>Timing Behaviour</b><br>
+<span id="timingStatus">✅ Normal</span>
+</div>
+
+<div class="factor">
+<b>Data Consistency</b><br>
+<span id="dataStatus">✅ Consistent</span>
+</div>
+
+<div class="factor">
+<b>Communication Pattern</b><br>
+<span id="patternStatus">✅ Normal</span>
+</div>
+
+</div>
+
+<div class="log">
+
+<h2>Operational Event Timeline</h2>
+
+<div id="log1" class="event">
+12:41:03 — Normal communications active
+</div>
+
+<div id="log2" class="event">
+12:41:06 — Monitoring active
+</div>
+
+<div id="log3" class="event">
+12:41:09 — Awaiting anomaly
+</div>
+
+</div>
+
+</div>
+
+<div id="groundView" class="view">
+
+<div class="card">
+
+<h2>Fleet Trust Monitoring Dashboard</h2>
+
+<table>
+
+<tr>
+<th>Aircraft</th>
+<th>Status</th>
+<th>Trust Level</th>
+</tr>
+
+<tr>
+<td>A320-214</td>
+<td style="color:#58d878;">NORMAL</td>
+<td>94%</td>
+</tr>
+
+<tr>
+<td>A350-941</td>
+<td id="fleetStatus" style="color:#58d878;">
+NORMAL
+</td>
+<td id="fleetTrust">92%</td>
+</tr>
+
+<tr>
+<td>A321neo</td>
+<td style="color:#58d878;">NORMAL</td>
+<td>90%</td>
+</tr>
+
+</table>
+
+</div>
+
+</div>
+
+<div class="footer">
+Monitoring-Only Deployment • Human-in-the-Loop • DO-326A Aware
+</div>
+
+<script>
+
+function showAircraft(){
+
+document.getElementById("aircraftView").classList.add("activeView")
+document.getElementById("groundView").classList.remove("activeView")
+
+document.querySelectorAll(".tab")[0].classList.add("activeTab")
+document.querySelectorAll(".tab")[1].classList.remove("activeTab")
+
+}
+
+function showGround(){
+
+document.getElementById("groundView").classList.add("activeView")
+document.getElementById("aircraftView").classList.remove("activeView")
+
+document.querySelectorAll(".tab")[1].classList.add("activeTab")
+document.querySelectorAll(".tab")[0].classList.remove("activeTab")
+
+}
+
+function inject(){
+
+let score = 92;
+let phase = 1;
+
+const interval = setInterval(function(){
+
+if(phase === 1){
+
+score -= 4;
+
+document.getElementById("score").innerHTML =
+score + "%";
+
+document.getElementById("score").className =
+"score uncertain";
+
+document.getElementById("level").innerHTML =
+"Monitoring anomaly";
+
+document.getElementById("reason").innerHTML =
+"Abnormal timing behaviour detected";
+
+document.getElementById("mode").innerHTML =
+"SAFE CONTINUITY MODE: MONITORING";
+
+document.getElementById("mode").className =
+"bigStatus uncertain";
+
+document.getElementById("modeText").innerHTML =
+"Evaluating operational trust";
+
+document.getElementById("timingStatus").innerHTML =
+"⚠ Abnormal";
+
+document.getElementById("log1").innerHTML =
+"12:41:12 — Timing anomaly detected";
+
+document.getElementById("log1").className =
+"event warn";
+
+if(score <= 65){
+
+phase = 2;
+
+document.getElementById("decision").style.display =
+"block";
+
+document.getElementById("level").innerHTML =
+"Decision Required";
+
+document.getElementById("reason").innerHTML =
+"Inconsistent operational message detected";
+
+document.getElementById("log2").innerHTML =
+"12:41:16 — Trust degraded to uncertain";
+
+document.getElementById("log2").className =
+"event warn";
+
+}
+
+}
+
+else if(phase === 2){
+
+score -= 6;
+
+document.getElementById("score").innerHTML =
+score + "%";
+
+document.getElementById("dataStatus").innerHTML =
+"⚠ Inconsistent";
+
+document.getElementById("patternStatus").innerHTML =
+"⚠ Suspicious";
+
+document.getElementById("fleetStatus").innerHTML =
+"MONITORING";
+
+document.getElementById("fleetStatus").style.color =
+"#f7c948";
+
+document.getElementById("fleetTrust").innerHTML =
+score + "%";
+
+if(score <= 28){
+
+clearInterval(interval);
+
+document.getElementById("score").innerHTML =
+"28%";
+
+document.getElementById("score").className =
+"score untrusted";
+
+document.getElementById("level").innerHTML =
+"Untrusted – isolated";
+
+document.getElementById("reason").innerHTML =
+"Corrupted message pattern identified";
+
+document.getElementById("mode").innerHTML =
+"SAFE CONTINUITY MODE: ACTIVE";
+
+document.getElementById("mode").className =
+"bigStatus untrusted";
+
+document.getElementById("modeText").innerHTML =
+"Unsafe ACARS stream isolated • trusted systems continue operating";
+
+document.getElementById("dataStatus").innerHTML =
+"❌ Corrupted";
+
+document.getElementById("patternStatus").innerHTML =
+"❌ Unsafe";
+
+document.getElementById("fleetStatus").innerHTML =
+"ALERT";
+
+document.getElementById("fleetStatus").style.color =
+"#ff4d4d";
+
+document.getElementById("fleetTrust").innerHTML =
+"28%";
+
+document.getElementById("log3").innerHTML =
+"12:41:22 — Selective containment activated";
+
+document.getElementById("log3").className =
+"event danger";
+
+}
+
+}
+
+},700);
+
+}
+
+function accept(){
+
+document.getElementById("modeText").innerHTML =
+"Pilot accepted risk • operations continue with caution";
+
+}
+
+function reject(){
+
+document.getElementById("modeText").innerHTML =
+"Backup procedures enabled • ACARS stream ignored";
+
+}
+
+</script>
+
+</body>
+</html>
+```
